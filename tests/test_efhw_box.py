@@ -81,6 +81,19 @@ class TestEfhwBox(unittest.TestCase):
         self.assertIn('part == "lid"', text)
         self.assertIn('part == "preview"', text)
 
+    def test_trough_and_boss_params(self):
+        text = SCAD.read_text(encoding="utf-8")
+        self.assertRegex(text, r"trough_w\s*=\s*4")
+        self.assertRegex(text, r"trough_d\s*=\s*1")
+        self.assertRegex(text, r"boss_pilot_d\s*=\s*2\.5")
+
+    def test_body_outline_is_not_empty(self):
+        text = SCAD.read_text(encoding="utf-8")
+        start = text.index("module body_outline")
+        chunk = text[start : start + 800]
+        self.assertIn("polygon", chunk)
+        self.assertIn("offset", chunk)
+
     def _openscad(self, args):
         exe = shutil.which("openscad")
         if not exe:

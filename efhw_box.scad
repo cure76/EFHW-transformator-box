@@ -62,10 +62,71 @@ function outer_y() = inner_y + 2 * wall + 2 * flange_out;
 function base_h() = floor_t + inner_z;
 function flange_h() = 3.0;
 
-module body_outline(h) {}
-module cavity() {}
-module screw_bosses() {}
-module sealant_trough() {}
+module body_outline(h) {
+    linear_extrude(height = h)
+        offset(r = corner_r)
+            offset(delta = -corner_r)
+                polygon([
+                    [-outer_x() / 2, -outer_y() / 2],
+                    [ outer_x() / 2 - chamfer, -outer_y() / 2],
+                    [ outer_x() / 2, -outer_y() / 2 + chamfer],
+                    [ outer_x() / 2,  outer_y() / 2 - chamfer],
+                    [ outer_x() / 2 - chamfer,  outer_y() / 2],
+                    [-outer_x() / 2,  outer_y() / 2]
+                ]);
+}
+
+module inner_outline(h) {
+    linear_extrude(height = h)
+        offset(r = max(0.1, corner_r - wall))
+            offset(delta = -(max(0.1, corner_r - wall)))
+                square([inner_x, inner_y], center = true);
+}
+
+module cavity() {
+    translate([0, 0, floor_t])
+        inner_outline(inner_z + 1);
+}
+
+module screw_bosses() {
+    inset = boss_d / 2 + 1.5;
+    positions = [
+        [ inner_x / 2 - inset,  inner_y / 2 - inset],
+        [ inner_x / 2 - inset, -inner_y / 2 + inset],
+        [-inner_x / 2 + inset,  inner_y / 2 - inset],
+        [-inner_x / 2 + inset, -inner_y / 2 + inset]
+    ];
+    for (p = positions) {
+        translate([p[0], p[1], floor_t])
+            difference() {
+                cylinder(d = boss_d, h = inner_z - trough_d);
+                translate([0, 0, inner_z - trough_d - boss_pilot_depth])
+                    cylinder(d = boss_pilot_d, h = boss_pilot_depth + 0.2);
+            }
+    }
+}
+
+module sealant_trough() {
+    ox = outer_x();
+    oy = outer_y();
+    land = (rim_w - trough_w) / 2;
+    translate([0, 0, base_h() - trough_d])
+        difference() {
+            linear_extrude(height = trough_d + 0.2)
+                offset(r = corner_r - land)
+                    offset(delta = -(corner_r - land))
+                        square([ox - 2 * land, oy - 2 * land], center = true);
+            linear_extrude(height = trough_d + 0.4)
+                offset(r = max(0.1, corner_r - land - trough_w))
+                    offset(delta = -(max(0.1, corner_r - land - trough_w)))
+                        square(
+                            [ox - 2 * land - 2 * trough_w,
+                             oy - 2 * land - 2 * trough_w],
+                            center = true
+                        );
+        }
+}
+
 module mounting_tab() {}
 module drain_holes() {}
 module so239_cutout() {}
@@ -73,7 +134,26 @@ module m4_cutout() {}
 module lid_label() {}
 
 module base() {
-    cube([0.1, 0.1, 0.1]);
+    difference() {
+        union() {
+            difference() {
+                body_outline(base_h());
+                cavity();
+            }
+            // Outward flange at the rim so trough_w=4 fits on a 2.8 mm wall.
+            translate([0, 0, base_h() - flange_h()])
+                difference() {
+                    body_outline(flange_h());
+                    inner_outline(flange_h() + 0.2);
+                }
+            screw_bosses();
+        }
+        sealant_trough();
+        drain_holes();
+        so239_cutout();
+        m4_cutout();
+    }
+    mounting_tab();
 }
 
 module lid() {
