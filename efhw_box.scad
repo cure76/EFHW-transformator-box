@@ -8,7 +8,7 @@ inner_y = 85;
 inner_z = 38;
 wall = 2.8;
 floor_t = 2.8;
-lid_t = 2.8;
+lid_t = 3.6;              // thicker than walls so the 90° CSK is not a knife edge
 
 // Top mating face must be wider than wall so a 4 mm trough fits.
 rim_w = 7;
@@ -20,12 +20,13 @@ corner_r = 8;
 chamfer = 14;
 fit_clearance = 0.25;
 
-boss_d = 9;
-boss_pilot_d = 2.5;
+// Four M4×10 countersunk (flat-head) self-tappers. Length includes the head.
+boss_d = 12;
+boss_pilot_d = 3.2;
 boss_pilot_depth = 10;
-lid_screw_d = 3.2;
-lid_csink_d = 6.5;
-lid_csink_h = 1.6;
+lid_screw_d = 4.0;
+lid_csink_d = 9.0;         // DIN 965 M4 head max 8.4 mm + print
+lid_csink_h = 2.3;         // 90° CSK, flush in lid_t
 skirt_t = 1.6;
 skirt_gap = 0.3;
 
@@ -312,17 +313,12 @@ module lid_screw_holes() {
         [-inner_x / 2 + inset, -inner_y / 2 + inset]
     ];
     for (p = positions) {
+        shank = lid_screw_d + 2 * fit_clearance;
         translate([p[0], p[1], -0.1])
-            cylinder(
-                d = lid_screw_d + 2 * fit_clearance,
-                h = lid_t + 0.2
-            );
+            cylinder(d = shank, h = lid_t + 0.2);
+        // 90° cone from the through-hole out to the flat head.
         translate([p[0], p[1], lid_t - lid_csink_h])
-            cylinder(
-                d1 = lid_screw_d,
-                d2 = lid_csink_d,
-                h = lid_csink_h + 0.05
-            );
+            cylinder(d1 = shank, d2 = lid_csink_d, h = lid_csink_h + 0.05);
     }
 }
 

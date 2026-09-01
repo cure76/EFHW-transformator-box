@@ -86,7 +86,12 @@ class TestEfhwBox(unittest.TestCase):
         text = SCAD.read_text(encoding="utf-8")
         self.assertRegex(text, r"trough_w\s*=\s*4")
         self.assertRegex(text, r"trough_d\s*=\s*1")
-        self.assertRegex(text, r"boss_pilot_d\s*=\s*2\.5")
+        self.assertRegex(text, r"boss_d\s*=\s*12")
+        self.assertRegex(text, r"boss_pilot_d\s*=\s*3\.2")
+        self.assertRegex(text, r"lid_t\s*=\s*3\.6")
+        self.assertRegex(text, r"lid_screw_d\s*=\s*4\.0")
+        self.assertRegex(text, r"lid_csink_d\s*=\s*9\.0")
+        self.assertRegex(text, r"lid_csink_h\s*=\s*2\.3")
 
     def test_body_outline_is_not_empty(self):
         text = SCAD.read_text(encoding="utf-8")
