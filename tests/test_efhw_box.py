@@ -119,6 +119,14 @@ class TestEfhwBox(unittest.TestCase):
         self.assertNotIn("flange_out", so)
         self.assertNotIn("flange_out", m4)
 
+    def test_lid_has_skirt_and_countersink(self):
+        text = SCAD.read_text(encoding="utf-8")
+        self.assertIn("module lid_shell", text)
+        lid = text[text.index("module lid_shell") : text.index("module preview_assembly")]
+        self.assertIn("skirt_h", lid)
+        self.assertIn("lid_csink_d", lid)
+        self.assertIn("body_outline", lid)
+
     def _openscad(self, args):
         exe = shutil.which("openscad")
         if not exe:

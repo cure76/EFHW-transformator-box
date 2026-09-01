@@ -246,13 +246,63 @@ module base() {
     mounting_tab();
 }
 
+module lid_shell() {
+    difference() {
+        union() {
+            // Plate follows the flange envelope; the mounting tab stays uncovered.
+            body_outline(lid_t);
+            difference() {
+                linear_extrude(height = skirt_h)
+                    offset(delta = skirt_t + skirt_gap)
+                        projection() body_outline(1);
+                linear_extrude(height = skirt_h + 0.2)
+                    offset(delta = skirt_gap)
+                        projection() body_outline(1);
+            }
+        }
+        lid_screw_holes();
+        translate([0, 0, lid_t - label_depth])
+            lid_label();
+    }
+}
+
+module lid_screw_holes() {
+    inset = boss_d / 2 + 1.5;
+    chamfer_inset = chamfer / 2;
+    // Keep these positions identical to screw_bosses().
+    positions = [
+        [ inner_x / 2 - inset - chamfer_inset,
+          inner_y / 2 - inset - chamfer_inset],
+        [ inner_x / 2 - inset - chamfer_inset,
+         -inner_y / 2 + inset + chamfer_inset],
+        [-inner_x / 2 + inset,  inner_y / 2 - inset],
+        [-inner_x / 2 + inset, -inner_y / 2 + inset]
+    ];
+    for (p = positions) {
+        translate([p[0], p[1], -0.1])
+            cylinder(
+                d = lid_screw_d + 2 * fit_clearance,
+                h = lid_t + 0.2
+            );
+        translate([p[0], p[1], lid_t - lid_csink_h])
+            cylinder(
+                d1 = lid_screw_d,
+                d2 = lid_csink_d,
+                h = lid_csink_h + 0.05
+            );
+    }
+}
+
 module lid() {
-    cube([0.1, 0.1, 0.1]);
+    lid_shell();
 }
 
 module preview_assembly() {
-    base();
-    translate([0, 0, base_h() + 0.2]) lid();
+    color("DimGray") base();
+    color("Gray")
+        translate([0, 0, base_h() + lid_t + 0.15])
+            rotate([180, 0, 0])
+                lid_shell();
 }
 
 if (part == "base") {
