@@ -212,7 +212,7 @@ module m4_cutout() {
         rotate([90, 0, 0])
             cylinder(d = shank, h = wall + 2);
     // Hex recess opens inward and captures the inside bolt head.
-    translate([x, y_wall + m4_head_h - 0.01, zc])
+    translate([x, y_wall, zc])
         rotate([90, 0, 0])
             cylinder(
                 d = m4_head_af / cos(30) + 2 * fit_clearance,
