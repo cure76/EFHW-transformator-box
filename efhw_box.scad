@@ -249,8 +249,10 @@ module base() {
 module lid_shell() {
     difference() {
         union() {
-            // Plate follows the flange envelope; the mounting tab stays uncovered.
-            body_outline(lid_t);
+            // Plate reaches the skirt outer edge; the mounting tab stays uncovered.
+            linear_extrude(height = lid_t)
+                offset(delta = skirt_t + skirt_gap)
+                    projection() body_outline(1);
             difference() {
                 linear_extrude(height = skirt_h)
                     offset(delta = skirt_t + skirt_gap)
