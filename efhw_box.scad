@@ -59,21 +59,32 @@ $fn = 48;
 
 function outer_x() = inner_x + 2 * wall + 2 * flange_out;
 function outer_y() = inner_y + 2 * wall + 2 * flange_out;
+function wall_x() = inner_x + 2 * wall;
+function wall_y() = inner_y + 2 * wall;
 function base_h() = floor_t + inner_z;
 function flange_h() = 3.0;
 
 module body_outline(h) {
     linear_extrude(height = h)
-        offset(r = corner_r)
-            offset(delta = -corner_r)
-                polygon([
-                    [-outer_x() / 2, -outer_y() / 2],
-                    [ outer_x() / 2 - chamfer, -outer_y() / 2],
-                    [ outer_x() / 2, -outer_y() / 2 + chamfer],
-                    [ outer_x() / 2,  outer_y() / 2 - chamfer],
-                    [ outer_x() / 2 - chamfer,  outer_y() / 2],
-                    [-outer_x() / 2,  outer_y() / 2]
-                ]);
+        chamfered_profile(outer_x(), outer_y());
+}
+
+module chamfered_profile(sx, sy) {
+    offset(r = corner_r)
+        offset(delta = -corner_r)
+            polygon([
+                [-sx / 2, -sy / 2],
+                [ sx / 2 - chamfer, -sy / 2],
+                [ sx / 2, -sy / 2 + chamfer],
+                [ sx / 2,  sy / 2 - chamfer],
+                [ sx / 2 - chamfer,  sy / 2],
+                [-sx / 2,  sy / 2]
+            ]);
+}
+
+module wall_outline(h) {
+    linear_extrude(height = h)
+        chamfered_profile(wall_x(), wall_y());
 }
 
 module inner_outline(h) {
@@ -107,23 +118,15 @@ module screw_bosses() {
 }
 
 module sealant_trough() {
-    ox = outer_x();
-    oy = outer_y();
     land = (rim_w - trough_w) / 2;
     translate([0, 0, base_h() - trough_d])
         difference() {
             linear_extrude(height = trough_d + 0.2)
-                offset(r = corner_r - land)
-                    offset(delta = -(corner_r - land))
-                        square([ox - 2 * land, oy - 2 * land], center = true);
+                offset(delta = -land)
+                    chamfered_profile(outer_x(), outer_y());
             linear_extrude(height = trough_d + 0.4)
-                offset(r = max(0.1, corner_r - land - trough_w))
-                    offset(delta = -(max(0.1, corner_r - land - trough_w)))
-                        square(
-                            [ox - 2 * land - 2 * trough_w,
-                             oy - 2 * land - 2 * trough_w],
-                            center = true
-                        );
+                offset(delta = -(land + trough_w))
+                    chamfered_profile(outer_x(), outer_y());
         }
 }
 
@@ -137,7 +140,7 @@ module base() {
     difference() {
         union() {
             difference() {
-                body_outline(base_h());
+                wall_outline(base_h());
                 cavity();
             }
             // Outward flange at the rim so trough_w=4 fits on a 2.8 mm wall.
