@@ -1,12 +1,11 @@
 // EFHW unun box for FT 240-43 — PETG FDM
-// Spec: docs/superpowers/specs/2026-09-01-efhw-transformer-box-design.md
 
 part = "preview"; // "base" | "lid" | "preview"
 ratio = 64;       // 64 or 49
 
 inner_x = 108;
 inner_y = 85;
-inner_z = 28;
+inner_z = 38;
 wall = 2.8;
 floor_t = 2.8;
 lid_t = 2.8;
@@ -30,14 +29,14 @@ lid_csink_h = 1.6;
 skirt_t = 1.6;
 skirt_gap = 0.3;
 
-tab_len = 28;
-tab_t = wall;
+tab_len = 30;
+tab_t = 8;                 // hanging plate thickness (was wall = 2.8)
 tab_center_hole_d = 8;
-tab_side_hole_d = 5;
+tab_side_hole_d = 8;
 
 drain_d = 3;
-drain_from_inner_end = 9;
-drain_y_off = 18;
+// Max |Y| on the flat +X face, hole fully on the wall (not on the 45° chamfer).
+drain_y_off = inner_y / 2 - chamfer - drain_d / 2 - 1.5;
 
 so_flange = 25.4;
 so_hole_spacing = 18.2;
@@ -135,38 +134,50 @@ module sealant_trough() {
 }
 
 module mounting_tab() {
-    // Tab grows from the −X wall face. Thickness = tab_t, Z from 0.
-    y_spread = 11;
-    x_root = -wall_x() / 2;
-    x_tip = x_root - tab_len;
+    // Full-width rear flange, thicker than the wall, clover tip with 3 holes.
+    x_wall = -wall_x() / 2;
+    x_tip = x_wall - tab_len;
+    y_h = wall_y() / 2;
+    side_y = y_h - 12;
+
     difference() {
         hull() {
-            translate([x_root + 1, 0, 0])
-                cylinder(d = 22, h = tab_t);
-            translate([x_tip + 7, 0, 0])
+            // Root spans the whole −X wall and bites into it.
+            translate([x_wall + 4, 0, tab_t / 2])
+                cube([8, wall_y(), tab_t], center = true);
+            translate([x_wall, y_h - 8, 0])
                 cylinder(d = 16, h = tab_t);
-            translate([x_tip + 10, y_spread, 0])
-                cylinder(d = 12, h = tab_t);
-            translate([x_tip + 10, -y_spread, 0])
-                cylinder(d = 12, h = tab_t);
+            translate([x_wall, -y_h + 8, 0])
+                cylinder(d = 16, h = tab_t);
+            // Rounded clover across the full width.
+            translate([x_tip + 12, 0, 0])
+                cylinder(d = 24, h = tab_t);
+            translate([x_tip + 14, side_y, 0])
+                cylinder(d = 20, h = tab_t);
+            translate([x_tip + 14, -side_y, 0])
+                cylinder(d = 20, h = tab_t);
         }
-        translate([x_tip + 8, 0, -0.1])
+        translate([x_tip + 11, 0, -0.1])
             cylinder(d = tab_center_hole_d, h = tab_t + 0.2);
-        translate([x_tip + 12, y_spread, -0.1])
+        translate([x_tip + 14, side_y, -0.1])
             cylinder(d = tab_side_hole_d, h = tab_t + 0.2);
-        translate([x_tip + 12, -y_spread, -0.1])
+        translate([x_tip + 14, -side_y, -0.1])
             cylinder(d = tab_side_hole_d, h = tab_t + 0.2);
     }
 }
 
 module drain_holes() {
-    x = inner_x / 2 - drain_from_inner_end;
+    // Through the SO-239 end wall, left and right of the connector.
+    // When the box hangs from the tab, that face is the lowest point.
+    zc = floor_t + inner_z / 2;
+    x_wall = inner_x / 2;
     for (s = [-1, 1]) {
-        translate([x, s * drain_y_off, -0.1])
-            cylinder(d = drain_d + 2 * fit_clearance, h = floor_t + 0.2);
-        // Outer chamfer so a drop releases.
-        translate([x, s * drain_y_off, -0.01])
-            cylinder(d1 = drain_d + 2 + 2 * fit_clearance, d2 = drain_d, h = 1.2);
+        translate([x_wall - 1, s * drain_y_off, zc])
+            rotate([0, 90, 0])
+                cylinder(d = drain_d, h = wall + 2);
+        translate([x_wall + wall + 0.01, s * drain_y_off, zc])
+            rotate([0, -90, 0])
+                cylinder(d1 = drain_d + 2, d2 = drain_d, h = 1.2);
     }
 }
 
@@ -203,16 +214,16 @@ module so239_pad() {
 module m4_cutout() {
     zc = floor_t + inner_z / 2;
     x = -inner_x / 2 + m4_from_tail_inner;
-    y_wall = inner_y / 2;
+    y_wall = -inner_y / 2;
     shank = m4_d + 2 * fit_clearance;
 
-    // Round shank through the 2.8 mm +Y wall only.
-    translate([x, y_wall + wall + 1, zc])
-        rotate([90, 0, 0])
+    // Round shank through the 2.8 mm −Y wall only.
+    translate([x, y_wall - wall - 1, zc])
+        rotate([-90, 0, 0])
             cylinder(d = shank, h = wall + 2);
     // Hex recess opens inward and captures the inside bolt head.
     translate([x, y_wall, zc])
-        rotate([90, 0, 0])
+        rotate([-90, 0, 0])
             cylinder(
                 d = m4_head_af / cos(30) + 2 * fit_clearance,
                 h = m4_head_h,
@@ -244,6 +255,13 @@ module lid_label() {
     }
 }
 
+module so239_rim_clearance() {
+    // Drop the outward lid-rim on the +X face so a 25.4 mm flange sits flat.
+    w = so_flange + 6;
+    translate([inner_x / 2 + wall, -w / 2, -0.1])
+        cube([flange_out + 1, w, base_h() - flange_h() + 0.1]);
+}
+
 module base() {
     difference() {
         union() {
@@ -261,6 +279,7 @@ module base() {
             so239_pad();
         }
         sealant_trough();
+        so239_rim_clearance();
         drain_holes();
         so239_cutout();
         m4_cutout();

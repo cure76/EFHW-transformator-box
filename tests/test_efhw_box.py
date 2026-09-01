@@ -68,7 +68,7 @@ class TestEfhwBox(unittest.TestCase):
         text = SCAD.read_text(encoding="utf-8")
         self.assertRegex(text, r"inner_x\s*=\s*108")
         self.assertRegex(text, r"inner_y\s*=\s*85")
-        self.assertRegex(text, r"inner_z\s*=\s*28")
+        self.assertRegex(text, r"inner_z\s*=\s*38")
         self.assertRegex(text, r"wall\s*=\s*2\.8")
 
     def test_required_modules_present(self):
@@ -101,8 +101,12 @@ class TestEfhwBox(unittest.TestCase):
         drain = text[text.index("module drain_holes") : text.index("module so239_cutout")]
         self.assertIn("hull", tab)
         self.assertIn("tab_center_hole_d", tab)
+        self.assertIn("wall_y()", tab)
+        self.assertRegex(text, r"tab_t\s*=\s*8")
         self.assertIn("drain_d", drain)
         self.assertIn("drain_y_off", drain)
+        self.assertIn("inner_x", drain)
+        self.assertIn("rotate", drain)
 
     def test_so239_and_m4_keywords(self):
         text = SCAD.read_text(encoding="utf-8")
@@ -137,11 +141,11 @@ class TestEfhwBox(unittest.TestCase):
 
     def test_readme_describes_drip_cap_without_hanging_wall(self):
         text = README.read_text(encoding="utf-8")
-        self.assertIn("inner face on the bed", text)
-        self.assertIn("label on top", text)
-        self.assertIn("silicone trough", text)
-        self.assertIn("overhang", text)
-        self.assertIn("no hanging wall over the seam", text)
+        self.assertIn("внутренней стороной на стол", text)
+        self.assertIn("надпись сверху", text)
+        self.assertIn("силикона в жёлобе", text)
+        self.assertIn("свес крышки", text)
+        self.assertIn("Нависающей юбки по шву нет", text)
 
     def test_label_uses_ratio_and_power_line(self):
         text = SCAD.read_text(encoding="utf-8")

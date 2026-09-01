@@ -1,44 +1,68 @@
-# EFHW transformer box (FT 240-43)
+# Корпус трансформатора EFHW под FT 240-43
 
-OpenSCAD enclosure for a 1:49 or 1:64 EFHW unun on one FT 240-43. Print in PETG.
+Параметрическая модель OpenSCAD: основание и крышка унна 1:49 / 1:64 на одном кольце **FT 240-43**. Печать **PETG**.
 
-## Open the model
+## Файл
 
-- `part = "preview"` — assembled view
-- `part = "base"` — export the box
-- `part = "lid"` — export the lid (inner face on the bed, label on top)
-- `ratio = 64` (default) or `49` — lid text `1:64` / `1:49` plus `250W SSB PEP`
+`efhw_box.scad` — без внешних библиотек.
 
-File: `efhw_box.scad`. No libraries.
+- `part = "preview"` — сборка на экране
+- `part = "base"` — основание
+- `part = "lid"` — крышка (внутренней стороной на стол, надпись сверху)
+- `ratio = 64` (по умолчанию) или `49` — на крышке `1:64` / `1:49` и `250W SSB PEP`
 
-## Print (PETG)
+## Полость
 
-- Layer 0.2 mm, at least 3 perimeters (walls are 2.8 mm).
-- Base: cavity up. Trough, bosses, and tab need no supports.
-- Lid: inner face on the bed, label on top. Label recesses form in the last layers.
-- Do not drill holes after printing.
+85 × 108 × 38 мм. Рассчитана на ПЭТВ-2 **1.25 мм** на FT 240-43, с запасом под **1.5 мм** и квадратный фланец SO-239 25.4 мм. Габарит намотанного кольца Ø79 × 22 мм не должен задевать угловые стойки.
 
-The weather seal is the silicone trough plus the lid plate overhang, which acts
-as a drip cap. There is no hanging wall over the seam.
+Кольцо лежит плашмя, без клипс. По желанию — капля силикона в центр отверстия.
 
-## Fit
+```
+[хвост, 3 × Ø8 мм] [==== полость, кольцо плашмя ====] [SO-239 вниз]
+                         [M4 сбоку (−Y), ближе к хвосту]
+                         [крышка сверху, 4 самореза]
+                         [дренаж в торце SO-239]
+```
 
-Cavity 85 × 108 × 28 mm is sized for ПЭТВ-2 1.25 mm on FT 240-43, with room for 1.5 mm. A Ø79 × 22 mm wound-core envelope must clear the corner bosses.
+В работе корпус висит за хвост, разъём смотрит вниз.
 
-## Assembly
+## Печать (PETG)
 
-1. Fit SO-239, four M3 through the flange (clearance holes in PETG).
-2. Fit M4 from inside; washer and nut outside after soldering the radiator.
-3. Seat the toroid; optional silicone in the centre hole. No clips.
-4. Solder: centre pin, flange ground, M4 tap.
-5. Neutral-cure silicone bead in the rim trough.
-6. Lid, four ~M3×10–12 mm self-tappers into the bosses (pilot 2.5 mm).
-7. Leave the two drain holes at the SO-239 end open.
+- Слой 0.2 мм, не меньше 3 периметров (стенка 2.8 мм)
+- Основание: полостью вверх. Жёлоб, стойки и хвост — без поддержек
+- Крышка: внутренней стороной на стол, надпись сверху. Утопление букв — в последних слоях
+- Отверстия уже в модели, не сверлить после печати
 
-Hang from the tab; SO-239 points down.
+Герметизация: валик нейтрального силикона в жёлобе плюс свес крышки как капельник. Нависающей юбки по шву нет.
 
-## Tests
+## Сборка
 
-`python3 tests/test_efhw_box.py`
+1. Вставить корпусной SO-239, 4 × M3 через фланец (в PETG только зазоры).
+2. Вставить M4 изнутри; снаружи шайба и гайка после пайки полотна.
+3. Положить намотанное кольцо.
+4. Пайка: центральный пин, земля фланца, отвод на M4.
+5. Валик нейтрального силикона в жёлоб по кромке.
+6. Крышка, 4 самореза ~M3 × 10–12 мм в стойки (пилот Ø 2.5 мм).
+7. Два дренажных отверстия в торце SO-239 не замазывать.
 
-OpenSCAD CLI is optional; without it, render checks are skipped.
+Противовеса на корпусе нет.
+
+## Мощность (оценка, не паспорт)
+
+Одно FT 240-43 в закрытом PETG ограничено ферритом, не проводом 1.25 мм.
+
+| Режим | Ориентир |
+| --- | --- |
+| SSB | ~250 Вт PEP |
+| CW | ~120 Вт |
+| FT8 | ~90 Вт |
+
+После FT8 корпус должен быть тёплым, не обжигающим.
+
+## Тесты
+
+```bash
+python3 tests/test_efhw_box.py
+```
+
+OpenSCAD CLI необязателен: без него проверки CSG/STL пропускаются.
