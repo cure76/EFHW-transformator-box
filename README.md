@@ -66,3 +66,7 @@ python3 tests/test_efhw_box.py
 ```
 
 OpenSCAD CLI необязателен: без него проверки CSG/STL пропускаются.
+
+## Лицензия
+
+[BSD 3-Clause](LICENSE).
