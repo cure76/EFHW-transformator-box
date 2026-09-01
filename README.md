@@ -6,7 +6,7 @@ OpenSCAD enclosure for a 1:49 or 1:64 EFHW unun on one FT 240-43. Print in PETG.
 
 - `part = "preview"` — assembled view
 - `part = "base"` — export the box
-- `part = "lid"` — export the lid (inner face on the bed, skirt up)
+- `part = "lid"` — export the lid (inner face on the bed, label on top)
 - `ratio = 64` (default) or `49` — lid text `1:64` / `1:49` plus `250W SSB PEP`
 
 File: `efhw_box.scad`. No libraries.
@@ -15,8 +15,11 @@ File: `efhw_box.scad`. No libraries.
 
 - Layer 0.2 mm, at least 3 perimeters (walls are 2.8 mm).
 - Base: cavity up. Trough, bosses, and tab need no supports.
-- Lid: inner face on the bed. Skirt grows up. Label recesses in the last layers.
+- Lid: inner face on the bed, label on top. Label recesses form in the last layers.
 - Do not drill holes after printing.
+
+The weather seal is the silicone trough plus the lid plate overhang, which acts
+as a drip cap. There is no hanging wall over the seam.
 
 ## Fit
 

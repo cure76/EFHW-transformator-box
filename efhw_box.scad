@@ -27,7 +27,6 @@ boss_pilot_depth = 10;
 lid_screw_d = 3.2;
 lid_csink_d = 6.5;
 lid_csink_h = 1.6;
-skirt_h = 5;
 skirt_t = 1.6;
 skirt_gap = 0.3;
 
@@ -271,20 +270,10 @@ module base() {
 
 module lid_shell() {
     difference() {
-        union() {
-            // Plate reaches the skirt outer edge; the mounting tab stays uncovered.
-            linear_extrude(height = lid_t)
-                offset(delta = skirt_t + skirt_gap)
-                    projection() body_outline(1);
-            difference() {
-                linear_extrude(height = skirt_h)
-                    offset(delta = skirt_t + skirt_gap)
-                        projection() body_outline(1);
-                linear_extrude(height = skirt_h + 0.2)
-                    offset(delta = skirt_gap)
-                        projection() body_outline(1);
-            }
-        }
+        // Plate overhangs the flange as a drip cap; there is no hanging wall.
+        linear_extrude(height = lid_t)
+            offset(delta = skirt_t + skirt_gap)
+                projection() body_outline(1);
         lid_screw_holes();
         translate([0, 0, lid_t - label_depth])
             lid_label();
@@ -325,9 +314,8 @@ module lid() {
 module preview_assembly() {
     color("DimGray") base();
     color("Gray")
-        translate([0, 0, base_h() + lid_t + 0.15])
-            rotate([180, 0, 0])
-                lid_shell();
+        translate([0, 0, base_h() + 0.15])
+            lid_shell();
 }
 
 if (part == "base") {

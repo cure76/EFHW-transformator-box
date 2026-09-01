@@ -7,6 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SCAD = ROOT / "efhw_box.scad"
+README = ROOT / "README.md"
 
 REQUIRED_PARAMS = [
     "part",
@@ -119,13 +120,28 @@ class TestEfhwBox(unittest.TestCase):
         self.assertNotIn("flange_out", so)
         self.assertNotIn("flange_out", m4)
 
-    def test_lid_has_skirt_and_countersink(self):
+    def test_lid_has_drip_cap_overhang_and_countersink(self):
         text = SCAD.read_text(encoding="utf-8")
         self.assertIn("module lid_shell", text)
         lid = text[text.index("module lid_shell") : text.index("module preview_assembly")]
-        self.assertIn("skirt_h", lid)
+        self.assertIn("skirt_t + skirt_gap", lid)
+        self.assertNotIn("skirt_h", lid)
         self.assertIn("lid_csink_d", lid)
         self.assertIn("body_outline", lid)
+
+    def test_preview_keeps_lid_inner_face_down(self):
+        text = SCAD.read_text(encoding="utf-8")
+        preview = text[text.index("module preview_assembly") : text.index('if (part == "base")')]
+        self.assertIn("translate([0, 0, base_h() + 0.15])", preview)
+        self.assertNotIn("rotate([180, 0, 0])", preview)
+
+    def test_readme_describes_drip_cap_without_hanging_wall(self):
+        text = README.read_text(encoding="utf-8")
+        self.assertIn("inner face on the bed", text)
+        self.assertIn("label on top", text)
+        self.assertIn("silicone trough", text)
+        self.assertIn("overhang", text)
+        self.assertIn("no hanging wall over the seam", text)
 
     def test_label_uses_ratio_and_power_line(self):
         text = SCAD.read_text(encoding="utf-8")
