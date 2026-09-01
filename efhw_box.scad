@@ -170,32 +170,35 @@ module drain_holes() {
             cylinder(d1 = drain_d + 2 + 2 * fit_clearance, d2 = drain_d, h = 1.2);
     }
 }
+
 module so239_cutout() {
     zc = floor_t + inner_z / 2;
     x_wall = inner_x / 2;
     barrel = so_barrel_d + 2 * fit_clearance;
     screw = so_screw_d + 2 * fit_clearance;
     hs = so_hole_spacing / 2;
-    through_h = wall + 2;
-    pocket_d = wall - so_pad_t;
+    through_h = so_pad_t + wall + 2;
 
-    // Barrel through the 2.8 mm +X wall, with clean-cut overlap.
-    translate([x_wall - 1, 0, zc])
+    // Barrel through the inward pad and 2.8 mm +X wall.
+    translate([x_wall - so_pad_t - 1, 0, zc])
         rotate([0, 90, 0])
             cylinder(d = barrel, h = through_h);
     // Four M3 clearance holes matching the square SO-239 flange.
     for (a = [-1, 1], b = [-1, 1]) {
-        translate([x_wall - 1, a * hs, zc + b * hs])
+        translate([x_wall - so_pad_t - 1, a * hs, zc + b * hs])
             rotate([0, 90, 0])
                 cylinder(d = screw, h = through_h);
     }
-    // Shallow flange pocket leaves so_pad_t of plastic as the seat.
-    translate([
-        x_wall + so_pad_t,
-        -(so_flange + 0.4) / 2,
-        zc - (so_flange + 0.4) / 2
-    ])
-        cube([pocket_d + 0.2, so_flange + 0.4, so_flange + 0.4]);
+}
+
+module so239_pad() {
+    zc = floor_t + inner_z / 2;
+    x_wall = inner_x / 2;
+    pad_size = so_flange + 0.4;
+
+    // Full flange seat grows inward from the +X wall into the cavity.
+    translate([x_wall - so_pad_t, -pad_size / 2, zc - pad_size / 2])
+        cube([so_pad_t + 0.01, pad_size, pad_size]);
 }
 
 module m4_cutout() {
@@ -233,6 +236,7 @@ module base() {
                     inner_outline(flange_h() + 0.2);
                 }
             screw_bosses();
+            so239_pad();
         }
         sealant_trough();
         drain_holes();
