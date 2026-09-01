@@ -127,6 +127,15 @@ class TestEfhwBox(unittest.TestCase):
         self.assertIn("lid_csink_d", lid)
         self.assertIn("body_outline", lid)
 
+    def test_label_uses_ratio_and_power_line(self):
+        text = SCAD.read_text(encoding="utf-8")
+        lab = text[
+            text.index("module lid_label") : text.index("module lid_screw_holes")
+        ]
+        self.assertIn("250W SSB PEP", lab)
+        self.assertIn('str("1:", ratio)', lab)
+        self.assertIn("text", lab)
+
     def _openscad(self, args):
         exe = shutil.which("openscad")
         if not exe:
@@ -147,6 +156,16 @@ class TestEfhwBox(unittest.TestCase):
             )
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertGreater(out.stat().st_size, 100)
+
+    def test_openscad_stl_base_and_lid(self):
+        with tempfile.TemporaryDirectory() as td:
+            for p, name in [("base", "base.stl"), ("lid", "lid.stl")]:
+                out = Path(td) / name
+                r = self._openscad(
+                    ["-o", str(out), "-D", f'part="{p}"', str(SCAD)]
+                )
+                self.assertEqual(r.returncode, 0, r.stderr)
+                self.assertGreater(out.stat().st_size, 10_000, name)
 
 
 if __name__ == "__main__":

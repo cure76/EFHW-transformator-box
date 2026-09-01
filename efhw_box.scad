@@ -220,7 +220,30 @@ module m4_cutout() {
                 $fn = 6
             );
 }
-module lid_label() {}
+
+module lid_label() {
+    // Recessed into the outer face. Readable when tail (−X) is up:
+    // rotate 90° so the baseline runs across the short axis, top of glyphs
+    // toward −X.
+    linear_extrude(height = label_depth + 0.1) {
+        rotate([0, 0, 90]) {
+            translate([0, 4, 0])
+                text(
+                    str("1:", ratio),
+                    size = label_size_ratio,
+                    halign = "center",
+                    valign = "center"
+                );
+            translate([0, -8, 0])
+                text(
+                    "250W SSB PEP",
+                    size = label_size_power,
+                    halign = "center",
+                    valign = "center"
+                );
+        }
+    }
+}
 
 module base() {
     difference() {
