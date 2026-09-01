@@ -103,6 +103,22 @@ class TestEfhwBox(unittest.TestCase):
         self.assertIn("drain_d", drain)
         self.assertIn("drain_y_off", drain)
 
+    def test_so239_and_m4_keywords(self):
+        text = SCAD.read_text(encoding="utf-8")
+        so = text[text.index("module so239_cutout") : text.index("module m4_cutout")]
+        m4 = text[text.index("module m4_cutout") : text.index("module lid_label")]
+        self.assertIn("so_flange", so)
+        self.assertIn("so_hole_spacing", so)
+        self.assertIn("so_barrel_d", so)
+        self.assertIn("so_screw_d", so)
+        self.assertIn("so_pad_t", so)
+        self.assertIn("m4_head_af", m4)
+        self.assertIn("m4_from_tail_inner", m4)
+        self.assertIn("$fn = 6", m4)
+        self.assertIn("cylinder", so)
+        self.assertNotIn("flange_out", so)
+        self.assertNotIn("flange_out", m4)
+
     def _openscad(self, args):
         exe = shutil.which("openscad")
         if not exe:

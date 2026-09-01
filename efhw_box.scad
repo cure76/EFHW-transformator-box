@@ -170,8 +170,53 @@ module drain_holes() {
             cylinder(d1 = drain_d + 2 + 2 * fit_clearance, d2 = drain_d, h = 1.2);
     }
 }
-module so239_cutout() {}
-module m4_cutout() {}
+module so239_cutout() {
+    zc = floor_t + inner_z / 2;
+    x_wall = inner_x / 2;
+    barrel = so_barrel_d + 2 * fit_clearance;
+    screw = so_screw_d + 2 * fit_clearance;
+    hs = so_hole_spacing / 2;
+    through_h = wall + 2;
+    pocket_d = wall - so_pad_t;
+
+    // Barrel through the 2.8 mm +X wall, with clean-cut overlap.
+    translate([x_wall - 1, 0, zc])
+        rotate([0, 90, 0])
+            cylinder(d = barrel, h = through_h);
+    // Four M3 clearance holes matching the square SO-239 flange.
+    for (a = [-1, 1], b = [-1, 1]) {
+        translate([x_wall - 1, a * hs, zc + b * hs])
+            rotate([0, 90, 0])
+                cylinder(d = screw, h = through_h);
+    }
+    // Shallow flange pocket leaves so_pad_t of plastic as the seat.
+    translate([
+        x_wall + so_pad_t,
+        -(so_flange + 0.4) / 2,
+        zc - (so_flange + 0.4) / 2
+    ])
+        cube([pocket_d + 0.2, so_flange + 0.4, so_flange + 0.4]);
+}
+
+module m4_cutout() {
+    zc = floor_t + inner_z / 2;
+    x = -inner_x / 2 + m4_from_tail_inner;
+    y_wall = inner_y / 2;
+    shank = m4_d + 2 * fit_clearance;
+
+    // Round shank through the 2.8 mm +Y wall only.
+    translate([x, y_wall + wall + 1, zc])
+        rotate([90, 0, 0])
+            cylinder(d = shank, h = wall + 2);
+    // Hex recess opens inward and captures the inside bolt head.
+    translate([x, y_wall + m4_head_h - 0.01, zc])
+        rotate([90, 0, 0])
+            cylinder(
+                d = m4_head_af / cos(30) + 2 * fit_clearance,
+                h = m4_head_h,
+                $fn = 6
+            );
+}
 module lid_label() {}
 
 module base() {
