@@ -66,34 +66,34 @@ function flange_h() = 3.0;
 
 module body_outline(h) {
     linear_extrude(height = h)
-        chamfered_profile(outer_x(), outer_y());
+        offset(delta = wall + flange_out)
+            chamfered_profile();
 }
 
-module chamfered_profile(sx, sy, profile_r = corner_r) {
-    offset(r = profile_r)
-        offset(delta = -profile_r)
+// Every mating perimeter is a true offset of this inner cavity profile.
+module chamfered_profile() {
+    inner_corner_r = max(0.1, corner_r - wall);
+    offset(r = inner_corner_r)
+        offset(delta = -inner_corner_r)
             polygon([
-                [-sx / 2, -sy / 2],
-                [ sx / 2 - chamfer, -sy / 2],
-                [ sx / 2, -sy / 2 + chamfer],
-                [ sx / 2,  sy / 2 - chamfer],
-                [ sx / 2 - chamfer,  sy / 2],
-                [-sx / 2,  sy / 2]
+                [-inner_x / 2, -inner_y / 2],
+                [ inner_x / 2 - chamfer, -inner_y / 2],
+                [ inner_x / 2, -inner_y / 2 + chamfer],
+                [ inner_x / 2,  inner_y / 2 - chamfer],
+                [ inner_x / 2 - chamfer,  inner_y / 2],
+                [-inner_x / 2,  inner_y / 2]
             ]);
 }
 
 module wall_outline(h) {
     linear_extrude(height = h)
-        chamfered_profile(wall_x(), wall_y());
+        offset(delta = wall)
+            chamfered_profile();
 }
 
 module inner_outline(h) {
     linear_extrude(height = h)
-        chamfered_profile(
-            inner_x,
-            inner_y,
-            max(0.1, corner_r - wall)
-        );
+        chamfered_profile();
 }
 
 module cavity() {
@@ -127,11 +127,11 @@ module sealant_trough() {
     translate([0, 0, base_h() - trough_d])
         difference() {
             linear_extrude(height = trough_d + 0.2)
-                offset(delta = -land)
-                    chamfered_profile(outer_x(), outer_y());
+                offset(delta = wall + flange_out - land)
+                    chamfered_profile();
             linear_extrude(height = trough_d + 0.4)
-                offset(delta = -(land + trough_w))
-                    chamfered_profile(outer_x(), outer_y());
+                offset(delta = wall + flange_out - land - trough_w)
+                    chamfered_profile();
         }
 }
 
