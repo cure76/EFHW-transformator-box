@@ -46,9 +46,10 @@ so_screw_d = 3.2;
 so_pad_t = 2.5;
 
 m4_d = 4.0;
-m4_head_af = 7.0;
-m4_head_h = 2.8;
 m4_from_tail_inner = 18;
+m4_toward_so239 = 5;       // along +X, toward the connector
+m4_pad_t = 2;              // extra thickness inward, no hex pocket
+m4_pad_d = 14;
 
 label_depth = 0.6;
 label_size_ratio = 12;
@@ -62,6 +63,26 @@ function wall_x() = inner_x + 2 * wall;
 function wall_y() = inner_y + 2 * wall;
 function base_h() = floor_t + inner_z;
 function flange_h() = 3.0;
+function boss_inset() = boss_d / 2 + 1.5;
+
+// Same 1.5 mm gap to both faces of the corner as at the tail.
+function so239_boss_xy(sy) =
+    let (
+        inset = boss_inset(),
+        cy = sy * (inner_y / 2 - inset),
+        cx = inner_x / 2 + inner_y / 2 - chamfer
+            - abs(cy) - inset * sqrt(2)
+    ) [cx, cy];
+
+function tail_boss_xy(sy) =
+    [-inner_x / 2 + boss_inset(), sy * (inner_y / 2 - boss_inset())];
+
+function boss_centres() = [
+    so239_boss_xy(1),
+    so239_boss_xy(-1),
+    tail_boss_xy(1),
+    tail_boss_xy(-1)
+];
 
 module body_outline(h) {
     linear_extrude(height = h)
@@ -101,23 +122,34 @@ module cavity() {
 }
 
 module screw_bosses() {
-    inset = boss_d / 2 + 1.5;
-    chamfer_inset = chamfer / 2;
-    positions = [
-        [ inner_x / 2 - inset - chamfer_inset,
-          inner_y / 2 - inset - chamfer_inset],
-        [ inner_x / 2 - inset - chamfer_inset,
-         -inner_y / 2 + inset + chamfer_inset],
-        [-inner_x / 2 + inset,  inner_y / 2 - inset],
-        [-inner_x / 2 + inset, -inner_y / 2 + inset]
+    h = inner_z - trough_d;
+    // Fill the cavity between each post and its corner, never outside
+    // the inner profile (the +X 90° corner does not exist after the chamfer).
+    corners = [
+        [so239_boss_xy(1),  [ inner_x / 2,  inner_y / 2]],
+        [so239_boss_xy(-1), [ inner_x / 2, -inner_y / 2]],
+        [tail_boss_xy(1),   [-inner_x / 2,  inner_y / 2]],
+        [tail_boss_xy(-1),  [-inner_x / 2, -inner_y / 2]]
     ];
-    for (p = positions) {
-        translate([p[0], p[1], floor_t])
-            difference() {
-                cylinder(d = boss_d, h = inner_z - trough_d);
-                translate([0, 0, inner_z - trough_d - boss_pilot_depth])
-                    cylinder(d = boss_pilot_d, h = boss_pilot_depth + 0.2);
-            }
+
+    for (post = corners) {
+        pos = post[0];
+        corner = post[1];
+        difference() {
+            translate([0, 0, floor_t - 0.02])
+                linear_extrude(height = h + 0.02)
+                    intersection() {
+                        chamfered_profile();
+                        hull() {
+                            translate(pos)
+                                circle(d = boss_d);
+                            translate(corner)
+                                circle(d = boss_d);
+                        }
+                    }
+            translate([pos[0], pos[1], floor_t + h - boss_pilot_depth])
+                cylinder(d = boss_pilot_d, h = boss_pilot_depth + 0.2);
+        }
     }
 }
 
@@ -212,24 +244,27 @@ module so239_pad() {
         cube([so_pad_t + 0.01, pad_size, pad_size]);
 }
 
+module m4_pad() {
+    zc = floor_t + inner_z / 2;
+    x = -inner_x / 2 + m4_from_tail_inner + m4_toward_so239;
+    y_wall = -inner_y / 2;
+
+    // Inward boss on the −Y wall; hole is cut later through pad + wall.
+    translate([x, y_wall - 0.01, zc])
+        rotate([-90, 0, 0])
+            cylinder(d = m4_pad_d, h = m4_pad_t + 0.01);
+}
+
 module m4_cutout() {
     zc = floor_t + inner_z / 2;
-    x = -inner_x / 2 + m4_from_tail_inner;
+    x = -inner_x / 2 + m4_from_tail_inner + m4_toward_so239;
     y_wall = -inner_y / 2;
     shank = m4_d + 2 * fit_clearance;
+    through_h = wall + m4_pad_t + 2;
 
-    // Round shank through the 2.8 mm −Y wall only.
     translate([x, y_wall - wall - 1, zc])
         rotate([-90, 0, 0])
-            cylinder(d = shank, h = wall + 2);
-    // Hex recess opens inward and captures the inside bolt head.
-    translate([x, y_wall, zc])
-        rotate([-90, 0, 0])
-            cylinder(
-                d = m4_head_af / cos(30) + 2 * fit_clearance,
-                h = m4_head_h,
-                $fn = 6
-            );
+            cylinder(d = shank, h = through_h);
 }
 
 module lid_label() {
@@ -278,6 +313,7 @@ module base() {
                 }
             screw_bosses();
             so239_pad();
+            m4_pad();
         }
         sealant_trough();
         so239_rim_clearance();
@@ -301,18 +337,7 @@ module lid_shell() {
 }
 
 module lid_screw_holes() {
-    inset = boss_d / 2 + 1.5;
-    chamfer_inset = chamfer / 2;
-    // Keep these positions identical to screw_bosses().
-    positions = [
-        [ inner_x / 2 - inset - chamfer_inset,
-          inner_y / 2 - inset - chamfer_inset],
-        [ inner_x / 2 - inset - chamfer_inset,
-         -inner_y / 2 + inset + chamfer_inset],
-        [-inner_x / 2 + inset,  inner_y / 2 - inset],
-        [-inner_x / 2 + inset, -inner_y / 2 + inset]
-    ];
-    for (p = positions) {
+    for (p = boss_centres()) {
         shank = lid_screw_d + 2 * fit_clearance;
         translate([p[0], p[1], -0.1])
             cylinder(d = shank, h = lid_t + 0.2);

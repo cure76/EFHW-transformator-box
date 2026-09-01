@@ -47,6 +47,7 @@ REQUIRED_MODULES = [
     "drain_holes",
     "so239_cutout",
     "m4_cutout",
+    "m4_pad",
     "lid_label",
 ]
 
@@ -92,6 +93,14 @@ class TestEfhwBox(unittest.TestCase):
         self.assertRegex(text, r"lid_screw_d\s*=\s*4\.0")
         self.assertRegex(text, r"lid_csink_d\s*=\s*9\.0")
         self.assertRegex(text, r"lid_csink_h\s*=\s*2\.3")
+        bosses = text[text.index("module screw_bosses") : text.index("module sealant_trough")]
+        self.assertIn("hull", bosses)
+        self.assertIn("intersection", bosses)
+        self.assertIn("chamfered_profile", bosses)
+        self.assertIn("so239_boss_xy", bosses)
+        self.assertIn("tail_boss_xy", bosses)
+        lid = text[text.index("module lid_screw_holes") : text.index("module lid()")]
+        self.assertIn("boss_centres", lid)
 
     def test_body_outline_is_not_empty(self):
         text = SCAD.read_text(encoding="utf-8")
@@ -115,16 +124,22 @@ class TestEfhwBox(unittest.TestCase):
 
     def test_so239_and_m4_keywords(self):
         text = SCAD.read_text(encoding="utf-8")
-        so = text[text.index("module so239_cutout") : text.index("module m4_cutout")]
+        so = text[text.index("module so239_cutout") : text.index("module m4_pad")]
+        pad = text[text.index("module m4_pad") : text.index("module m4_cutout")]
         m4 = text[text.index("module m4_cutout") : text.index("module lid_label")]
         self.assertIn("so_flange", so)
         self.assertIn("so_hole_spacing", so)
         self.assertIn("so_barrel_d", so)
         self.assertIn("so_screw_d", so)
         self.assertIn("so_pad_t", so)
-        self.assertIn("m4_head_af", m4)
+        self.assertIn("m4_pad_d", pad)
+        self.assertIn("m4_pad_t", pad)
         self.assertIn("m4_from_tail_inner", m4)
-        self.assertIn("$fn = 6", m4)
+        self.assertIn("m4_toward_so239", m4)
+        self.assertRegex(text, r"m4_toward_so239\s*=\s*5")
+        self.assertRegex(text, r"m4_pad_t\s*=\s*2")
+        self.assertNotIn("$fn = 6", m4)
+        self.assertNotIn("m4_head_af", text)
         self.assertIn("cylinder", so)
         self.assertNotIn("flange_out", so)
         self.assertNotIn("flange_out", m4)
