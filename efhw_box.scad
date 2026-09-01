@@ -69,9 +69,9 @@ module body_outline(h) {
         chamfered_profile(outer_x(), outer_y());
 }
 
-module chamfered_profile(sx, sy) {
-    offset(r = corner_r)
-        offset(delta = -corner_r)
+module chamfered_profile(sx, sy, profile_r = corner_r) {
+    offset(r = profile_r)
+        offset(delta = -profile_r)
             polygon([
                 [-sx / 2, -sy / 2],
                 [ sx / 2 - chamfer, -sy / 2],
@@ -89,9 +89,11 @@ module wall_outline(h) {
 
 module inner_outline(h) {
     linear_extrude(height = h)
-        offset(r = max(0.1, corner_r - wall))
-            offset(delta = -(max(0.1, corner_r - wall)))
-                square([inner_x, inner_y], center = true);
+        chamfered_profile(
+            inner_x,
+            inner_y,
+            max(0.1, corner_r - wall)
+        );
 }
 
 module cavity() {
@@ -101,9 +103,12 @@ module cavity() {
 
 module screw_bosses() {
     inset = boss_d / 2 + 1.5;
+    chamfer_inset = chamfer / 2;
     positions = [
-        [ inner_x / 2 - inset,  inner_y / 2 - inset],
-        [ inner_x / 2 - inset, -inner_y / 2 + inset],
+        [ inner_x / 2 - inset - chamfer_inset,
+          inner_y / 2 - inset - chamfer_inset],
+        [ inner_x / 2 - inset - chamfer_inset,
+         -inner_y / 2 + inset + chamfer_inset],
         [-inner_x / 2 + inset,  inner_y / 2 - inset],
         [-inner_x / 2 + inset, -inner_y / 2 + inset]
     ];
