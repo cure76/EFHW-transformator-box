@@ -135,8 +135,41 @@ module sealant_trough() {
         }
 }
 
-module mounting_tab() {}
-module drain_holes() {}
+module mounting_tab() {
+    // Tab grows from the −X wall face. Thickness = tab_t, Z from 0.
+    y_spread = 11;
+    x_root = -wall_x() / 2;
+    x_tip = x_root - tab_len;
+    difference() {
+        hull() {
+            translate([x_root + 1, 0, 0])
+                cylinder(d = 22, h = tab_t);
+            translate([x_tip + 7, 0, 0])
+                cylinder(d = 16, h = tab_t);
+            translate([x_tip + 10, y_spread, 0])
+                cylinder(d = 12, h = tab_t);
+            translate([x_tip + 10, -y_spread, 0])
+                cylinder(d = 12, h = tab_t);
+        }
+        translate([x_tip + 8, 0, -0.1])
+            cylinder(d = tab_center_hole_d, h = tab_t + 0.2);
+        translate([x_tip + 12, y_spread, -0.1])
+            cylinder(d = tab_side_hole_d, h = tab_t + 0.2);
+        translate([x_tip + 12, -y_spread, -0.1])
+            cylinder(d = tab_side_hole_d, h = tab_t + 0.2);
+    }
+}
+
+module drain_holes() {
+    x = inner_x / 2 - drain_from_inner_end;
+    for (s = [-1, 1]) {
+        translate([x, s * drain_y_off, -0.1])
+            cylinder(d = drain_d + 2 * fit_clearance, h = floor_t + 0.2);
+        // Outer chamfer so a drop releases.
+        translate([x, s * drain_y_off, -0.01])
+            cylinder(d1 = drain_d + 2 + 2 * fit_clearance, d2 = drain_d, h = 1.2);
+    }
+}
 module so239_cutout() {}
 module m4_cutout() {}
 module lid_label() {}

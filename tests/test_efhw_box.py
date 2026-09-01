@@ -94,6 +94,15 @@ class TestEfhwBox(unittest.TestCase):
         self.assertIn("polygon", chunk)
         self.assertIn("offset", chunk)
 
+    def test_tab_and_drain_geometry_keywords(self):
+        text = SCAD.read_text(encoding="utf-8")
+        tab = text[text.index("module mounting_tab") : text.index("module drain_holes")]
+        drain = text[text.index("module drain_holes") : text.index("module so239_cutout")]
+        self.assertIn("hull", tab)
+        self.assertIn("tab_center_hole_d", tab)
+        self.assertIn("drain_d", drain)
+        self.assertIn("drain_y_off", drain)
+
     def _openscad(self, args):
         exe = shutil.which("openscad")
         if not exe:
