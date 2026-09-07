@@ -1,11 +1,11 @@
-// EFHW unun box for FT 240-43 — PETG FDM
+// EFHW unun box for two stacked FT 240-43 — PETG FDM
 
 part = "preview"; // "base" | "lid" | "plug" | "preview"
 ratio = 64;       // 64 or 49
 
 inner_x = 108;
 inner_y = 85;
-inner_z = 38;
+inner_z = 50;             // two FT 240-43 (25.4 mm) plus winding, SO-239 still clears
 wall = 2.8;
 floor_t = 2.8;
 lid_t = 3.6;              // thicker than walls so the 90° CSK is not a knife edge
@@ -317,7 +317,7 @@ module lid_label() {
                 );
             translate([0, -8, 0])
                 text(
-                    "250W SSB PEP",
+                    "500W SSB PEP",
                     size = label_size_power,
                     halign = "center",
                     valign = "center"

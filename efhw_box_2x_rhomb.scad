@@ -1,11 +1,11 @@
-// EFHW unun box for FT 240-43 — PETG FDM
+// EFHW unun box for two stacked FT 240-43, 2-hole rhombic SO-239 — PETG FDM
 
 part = "preview"; // "base" | "lid" | "plug" | "preview"
 ratio = 64;       // 64 or 49
 
 inner_x = 108;
 inner_y = 85;
-inner_z = 38;
+inner_z = 50;             // two FT 240-43 (25.4 mm) plus winding, SO-239 still clears
 wall = 2.8;
 floor_t = 2.8;
 lid_t = 3.6;              // thicker than walls so the 90° CSK is not a knife edge
@@ -39,11 +39,14 @@ drain_d = 3;
 // Max |Y| on the flat +X face, hole fully on the wall (not on the 45° chamfer).
 drain_y_off = inner_y / 2 - chamfer - drain_d / 2 - 1.5;
 
-so_flange = 25.4;
-so_hole_spacing = 18.2;
+// 2-hole rhombic SO-239; long axis along Y (left/right on the +X face).
+so_hole_spacing = 25;
 so_barrel_d = 16.3;
 so_screw_d = 3.2;
 so_pad_t = 2.5;
+so_flange_waist = 20;
+so_lobe_d = 12;
+so_flange = so_hole_spacing + so_lobe_d;
 
 m4_d = 4.0;
 m4_from_tail_inner = 18;
@@ -224,6 +227,15 @@ module drain_holes() {
     }
 }
 
+module so239_rhomb_profile() {
+    hull() {
+        circle(d = so_flange_waist);
+        for (s = [-1, 1])
+            translate([0, s * so_hole_spacing / 2])
+                circle(d = so_lobe_d);
+    }
+}
+
 module so239_cutout() {
     zc = floor_t + inner_z / 2;
     x_wall = inner_x / 2;
@@ -232,13 +244,12 @@ module so239_cutout() {
     hs = so_hole_spacing / 2;
     through_h = so_pad_t + wall + 2;
 
-    // Barrel through the inward pad and 2.8 mm +X wall.
     translate([x_wall - so_pad_t - 1, 0, zc])
         rotate([0, 90, 0])
             cylinder(d = barrel, h = through_h);
-    // Four M3 clearance holes matching the square SO-239 flange.
-    for (a = [-1, 1], b = [-1, 1]) {
-        translate([x_wall - so_pad_t - 1, a * hs, zc + b * hs])
+    // Two M3 clearance holes on the rhombus long axis (Y).
+    for (s = [-1, 1]) {
+        translate([x_wall - so_pad_t - 1, s * hs, zc])
             rotate([0, 90, 0])
                 cylinder(d = screw, h = through_h);
     }
@@ -247,11 +258,12 @@ module so239_cutout() {
 module so239_pad() {
     zc = floor_t + inner_z / 2;
     x_wall = inner_x / 2;
-    pad_size = so_flange + 0.4;
 
-    // Full flange seat grows inward from the +X wall into the cavity.
-    translate([x_wall - so_pad_t, -pad_size / 2, zc - pad_size / 2])
-        cube([so_pad_t + 0.01, pad_size, pad_size]);
+    // Inward seat matching the 2-hole diamond; long axis so_flange along Y.
+    translate([x_wall, 0, zc])
+        rotate([0, 90, 0])
+            linear_extrude(height = so_pad_t + 0.01)
+                so239_rhomb_profile();
 }
 
 module m4_pad() {
@@ -317,7 +329,7 @@ module lid_label() {
                 );
             translate([0, -8, 0])
                 text(
-                    "250W SSB PEP",
+                    "500W SSB PEP",
                     size = label_size_power,
                     halign = "center",
                     valign = "center"
@@ -327,7 +339,7 @@ module lid_label() {
 }
 
 module so239_rim_clearance() {
-    // Drop the outward lid-rim on the +X face so a 25.4 mm flange sits flat.
+    // Drop the outward lid-rim on the +X face so the rhombic flange sits flat.
     w = so_flange + 6;
     translate([inner_x / 2 + wall, -w / 2, -0.1])
         cube([flange_out + 1, w, base_h() - flange_h() + 0.1]);
