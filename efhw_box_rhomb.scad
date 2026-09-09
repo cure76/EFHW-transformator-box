@@ -56,6 +56,14 @@ m4_pad_d = 14;
 m4_plug_flange_d = 10;
 m4_plug_flange_t = 1.6;
 
+// FR4 0.5 mm standoffs. M3×6 pan-head self-tappers; blind pilot, not through the floor.
+fr4_boss_d = 16;
+fr4_boss_h = 6;
+fr4_pilot_d = 2.5;
+fr4_pilot_depth = 4;
+fr4_boss_y = 16;
+fr4_tail_drop = 10;        // +X from the tail lid posts, toward the cavity
+
 label_depth = 0.6;
 label_size_ratio = 12;
 label_size_power = 6;
@@ -124,6 +132,30 @@ module inner_outline(h) {
 module cavity() {
     translate([0, 0, floor_t])
         inner_outline(inner_z + 1);
+}
+
+module fr4_bosses() {
+    // Four pads on the floor for a 0.5 mm FR4 sheet. Screw heads sit outside
+    // the FT 240 winding; the core rests on the sheet between them.
+    // +X pair lines up with the SO-239 lid posts. −X pair is 10 mm toward
+    // the cavity from the tail lid posts.
+    for (sx = [-1, 1], sy = [-1, 1]) {
+        p = [
+            sx > 0 ? so239_boss_xy(1)[0] : tail_boss_xy(1)[0] + fr4_tail_drop,
+            sy * fr4_boss_y
+        ];
+        difference() {
+            translate([0, 0, floor_t - 0.02])
+                linear_extrude(height = fr4_boss_h + 0.02)
+                    intersection() {
+                        chamfered_profile();
+                        translate(p)
+                            circle(d = fr4_boss_d);
+                    }
+            translate([p[0], p[1], floor_t + fr4_boss_h - fr4_pilot_depth])
+                cylinder(d = fr4_pilot_d, h = fr4_pilot_depth + 0.2);
+        }
+    }
 }
 
 module screw_bosses() {
@@ -359,6 +391,7 @@ module base() {
                     inner_outline(flange_h() + 0.2);
                 }
             screw_bosses();
+            fr4_bosses();
             so239_pad();
             m4_pad();
         }

@@ -90,6 +90,21 @@ class BoxModelTests:
         self.assertIn('part == "plug"', text)
         self.assertIn('part == "preview"', text)
 
+    def test_fr4_standoff_bosses_for_m3x6(self):
+        text = self._text()
+        self.assertRegex(text, r"fr4_boss_d\s*=\s*16")
+        self.assertRegex(text, r"fr4_boss_h\s*=\s*6")
+        self.assertRegex(text, r"fr4_pilot_d\s*=\s*2\.5")
+        self.assertRegex(text, r"fr4_pilot_depth\s*=\s*4")
+        self.assertRegex(text, r"fr4_tail_drop\s*=\s*10")
+        self.assertIn("module fr4_bosses", text)
+        base = text[text.index("module base()") : text.index("module lid_shell")]
+        self.assertIn("fr4_bosses()", base)
+        bosses = text[text.index("module fr4_bosses") : text.index("module screw_bosses")]
+        self.assertIn("so239_boss_xy", bosses)
+        self.assertIn("tail_boss_xy", bosses)
+        self.assertIn("fr4_tail_drop", bosses)
+
     def test_trough_and_boss_params(self):
         text = self._text()
         self.assertRegex(text, r"trough_w\s*=\s*4")
@@ -262,6 +277,23 @@ class TestEfhwBox2xRhomb(BoxModelTests, RhombBoxTests, unittest.TestCase):
     scad = ROOT / "efhw_box_2x_rhomb.scad"
     inner_z = 50
     power_label = "500W SSB PEP"
+
+
+class TestFr4RetrofitStandoff(unittest.TestCase):
+    scad = ROOT / "efhw_fr4_standoff.scad"
+
+    def test_scad_exists(self):
+        self.assertTrue(self.scad.is_file())
+
+    def test_through_hole_spacer_and_jig(self):
+        text = self.scad.read_text(encoding="utf-8")
+        self.assertRegex(text, r"fr4_boss_d\s*=\s*16")
+        self.assertRegex(text, r"fr4_boss_h\s*=\s*6")
+        self.assertRegex(text, r"m3_clear_d\s*=\s*3\.2")
+        self.assertIn('part == "standoffs"', text)
+        self.assertIn('part == "jig"', text)
+        self.assertIn("module fr4_standoff", text)
+        self.assertIn("module drill_jig", text)
 
 
 if __name__ == "__main__":
