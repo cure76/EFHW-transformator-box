@@ -96,14 +96,17 @@ class BoxModelTests:
         self.assertRegex(text, r"fr4_boss_h\s*=\s*6")
         self.assertRegex(text, r"fr4_pilot_d\s*=\s*2\.5")
         self.assertRegex(text, r"fr4_pilot_depth\s*=\s*4")
-        self.assertRegex(text, r"fr4_tail_drop\s*=\s*10")
+        self.assertRegex(text, r"fr4_boss_x\s*=\s*34")
+        self.assertRegex(text, r"fr4_boss_y\s*=\s*21\.5")
+        self.assertRegex(text, r"fr4_lid_clear\s*=\s*0\.5")
         self.assertIn("module fr4_bosses", text)
         base = text[text.index("module base()") : text.index("module lid_shell")]
         self.assertIn("fr4_bosses()", base)
         bosses = text[text.index("module fr4_bosses") : text.index("module screw_bosses")]
-        self.assertIn("so239_boss_xy", bosses)
-        self.assertIn("tail_boss_xy", bosses)
-        self.assertIn("fr4_tail_drop", bosses)
+        self.assertIn("fr4_boss_x", bosses)
+        self.assertIn("fr4_boss_y", bosses)
+        self.assertIn("boss_centres", bosses)
+        self.assertIn("fr4_lid_clear", bosses)
 
     def test_trough_and_boss_params(self):
         text = self._text()
@@ -171,7 +174,10 @@ class BoxModelTests:
         self.assertNotIn("flange_out", m4)
         self.assertIn("m4_plug_flange_d", plug)
         self.assertIn("m4_plug_flange_t", plug)
-        self.assertIn("m4_d", plug)
+        self.assertIn("m4_plug_press", plug)
+        self.assertIn("m4_plug_extra_h", plug)
+        self.assertRegex(text, r"m4_plug_press\s*=\s*0\.2")
+        self.assertRegex(text, r"m4_plug_extra_h\s*=\s*2")
 
     def test_lid_has_drip_cap_overhang_and_countersink(self):
         text = self._text()
@@ -294,6 +300,13 @@ class TestFr4RetrofitStandoff(unittest.TestCase):
         self.assertIn('part == "jig"', text)
         self.assertIn("module fr4_standoff", text)
         self.assertIn("module drill_jig", text)
+        self.assertRegex(text, r"jig_x\s*=\s*80")
+        self.assertRegex(text, r"jig_y\s*=\s*55")
+        self.assertRegex(text, r"jig_finger_d\s*=\s*8")
+        self.assertRegex(text, r"jig_edge\s*=\s*6")
+        self.assertIn("jig_x / 2 - jig_edge", text)
+        self.assertIn("jig_y / 2 - jig_edge", text)
+        self.assertIn("fr4_pad_xy", text)
 
 
 if __name__ == "__main__":
